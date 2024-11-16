@@ -1,0 +1,39 @@
+{
+  "name": "@ghaerdi/aicommits",
+  "version": "1.0.0",
+  "description": "AI-powered git commit message generator",
+  "main": "dist/index.js",
+  "module": "index.ts",
+  "type": "module",
+  "bin": {
+    "aicommit": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "@ghaerdi/rustify": "npm:@jsr/ghaerdi__rustify",
+    "@google/genai": "^0.8.0",
+    "ollama": "^0.5.12"
+  }
+}
