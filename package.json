@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.7.0",
-    "@ghaerdi/rustify": "npm:@jsr/ghaerdi__rustify",
+    "@ghaerdi/rustify": "^2.0.0",
     "@google/genai": "^0.8.0",
     "ollama": "^0.5.12"
   }
