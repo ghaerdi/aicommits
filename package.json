@@ -1,6 +1,6 @@
 {
   "name": "@ghaerdi/aicommits",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered git commit message generator",
   "main": "dist/index.js",
   "module": "index.ts",
@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "bun build index.ts --outdir dist --target node",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

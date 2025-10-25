@@ -1,6 +1,9 @@
 import { Err, Ok, Result } from "@ghaerdi/rustify/result"
 import { Option } from "@ghaerdi/rustify/option";
-import { $ } from "bun";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const exec = promisify(execFile);
 
 const enum GitError {
   NotInitialized = "Git is not initialized",
@@ -8,13 +11,19 @@ const enum GitError {
 }
 
 async function isInsideWorkTree(): Promise<Result<boolean, unknown>> {
-  const output = await Result.fromAsync(() => $`git rev-parse --is-inside-work-tree`.text());
+  const output = await Result.fromAsync(async () => {
+    const { stdout } = await exec('git', ['rev-parse', '--is-inside-work-tree']);
+    return stdout;
+  });
   return output.map(v => v.trim() === "true");
 }
 
 export const git = {
   async currentBranch(): Promise<Option<string>> {
-    const output = await Result.fromAsync(() => $`git branch --show-current`.text());
+    const output = await Result.fromAsync(async () => {
+      const { stdout } = await exec('git', ['branch', '--show-current']);
+      return stdout;
+    });
     return output.ok()
   },
   async checkInit(): Promise<Result<true, GitError>> {
@@ -25,7 +34,10 @@ export const git = {
   },
   async files(): Promise<Result<string[], GitError>> {
     const output = await Result.fromAsync(
-      () => $`git diff --cached --diff-algorithm=minimal --name-only`.text(),
+      async () => {
+        const { stdout } = await exec('git', ['diff', '--cached', '--diff-algorithm=minimal', '--name-only']);
+        return stdout;
+      },
       _err => GitError.NoFilesStaged,
     );
     return output
@@ -34,12 +46,18 @@ export const git = {
   },
   async diff(): Promise<Result<string, GitError>> {
     return await Result.fromAsync(
-      () => $`git diff --cached --diff-algorithm=minimal`.text(),
+      async () => {
+        const { stdout } = await exec('git', ['diff', '--cached', '--diff-algorithm=minimal']);
+        return stdout;
+      },
       _err => GitError.NoFilesStaged
     )
   },
   async commit(message: string, noVerify = false): Promise<void> {
     console.log("\n");
-    console.log(await $`git commit -m ${message} ${noVerify ? "--no-verify" : ""}`.text());
+    const args = ['commit', '-m', message];
+    if (noVerify) args.push('--no-verify');
+    const { stdout } = await exec('git', args);
+    console.log(stdout);
   }
 }
