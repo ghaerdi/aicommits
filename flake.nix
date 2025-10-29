@@ -14,7 +14,7 @@
       {
         packages.default = pkgs.stdenv.mkDerivation {
           pname = "aicommits";
-          version = "1.0.0";
+          version = "1.1.0";
           
           src = ./.;
           
