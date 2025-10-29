@@ -5,6 +5,7 @@ import { gemini } from "./src/llm-models/gemini";
 import { git } from "./src/git";
 
 const FLAGS = {
+  help: ["--help", "-h"],
   noVerify: ["--no-verify", "-n"],
   review: ["--review", "-r"],
   local: ["--local", "-l"],
@@ -14,6 +15,30 @@ const FLAGS = {
 }
 
 if (import.meta.main) {
+  // Check for help flag first
+  if (process.argv.some(v => FLAGS.help.some(f => f === v))) {
+    console.log(`aicommit - AI-powered git commit message generator
+
+Usage: aicommit [options]
+
+Options:
+  -h, --help         Show this help message
+  -n, --no-verify    Skip git pre-commit hooks
+  -r, --review       Review code changes with AI
+  -l, --local        Use local AI model instead of Gemini
+  --oncall           Mark as oncall commit
+  -b, --branch       Include branch name in commit
+  -g, --generate <n> Generate <n> commit messages (default: 4)
+
+Examples:
+  aicommit                    Generate commit messages
+  aicommit -r                 Review code and generate commits
+  aicommit -l                 Use local AI model
+  aicommit -g 6               Generate 6 commit messages
+  aicommit --oncall -b        Oncall commit with branch name`);
+    process.exit(0);
+  }
+
   const config = {
     gitNoVerify: process.argv.some(v => FLAGS.noVerify.some(f => f === v)),
     review: process.argv.some(v => FLAGS.review.some(f => f === v)),
