@@ -73,8 +73,8 @@ Examples:
     process.exit();
   });
   _spinner.stop(`${files.length} files in stage\n    ${files.join("\n    ")}`);
-  if (!config.oncall) {
-    config.oncall = await confirm({ message: "Is oncall?", initialValue: false }) as boolean;
+  if (config.oncall) {
+    config.oncall = await confirm({ message: "Is oncall?", initialValue: true }) as boolean;
   }
   let branch = "";
   if (config.branch || config.oncall) {
