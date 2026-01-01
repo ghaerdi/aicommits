@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { select, spinner, confirm, isCancel } from "@clack/prompts";
-import { aicommits, aireview, local } from "./src/llm-models/local";
+import { aicommitsRegular, aicommitsBranch, aicommitsOncall, aicommitsBranchOncall, aireview, local } from "./src/llm-models/local";
 import { gemini } from "./src/llm-models/gemini";
 import { git } from "./src/git";
+import type { CommitContext } from "./src/llm-models/shared";
 
 const FLAGS = {
   help: ["--help", "-h"],
@@ -58,11 +59,29 @@ Examples:
   });
 
   const _spinner = spinner()
-  _spinner.start("Spying your files");
 
   // Create local models
-  if (config.local && config.review) await aireview.createModel();
-  if (config.local) await aicommits.createModel();
+  if (config.local && config.review) {
+    _spinner.start("Initializing local review model (may download if not cached)");
+    await aireview.createModel();
+    _spinner.stop("Local review model ready");
+  }
+  if (config.local) {
+    _spinner.start("Initializing local commit model (may download if not cached)");
+    // Create appropriate model based on flags
+    if (config.oncall && config.branch) {
+      await aicommitsBranchOncall.createModel();
+    } else if (config.oncall) {
+      await aicommitsOncall.createModel();
+    } else if (config.branch) {
+      await aicommitsBranch.createModel();
+    } else {
+      await aicommitsRegular.createModel();
+    }
+    _spinner.stop("Local commit model ready");
+  }
+
+  _spinner.start("Spying your files");
 
   const diff = (await git.diff()).unwrapOrElse(err => {
     console.error(err);
@@ -76,12 +95,24 @@ Examples:
   if (config.oncall) {
     config.oncall = await confirm({ message: "Is oncall?", initialValue: true }) as boolean;
   }
-  let branch = "";
+
+  let branchName: string | undefined = undefined;
   if (config.branch || config.oncall) {
-    branch = (await git.currentBranch()).expect("should be safe to run git.branch after git.checkInit");
+    const branchOption = await git.currentBranch();
+    branchName = branchOption.unwrapOr(undefined);
   }
+
+  // Build CommitContext based on flag combination
+  const commitContext: CommitContext = {
+    mode: config.oncall && config.branch ? 'branch-oncall'
+        : config.oncall ? 'oncall'
+        : config.branch ? 'branch'
+        : 'regular',
+    branchName
+  };
+
   const model = config.local ? local : gemini;
-  const commitsPromise = model.messages(diff, config.oncall ? `oncall/${branch}` : branch, config.generate) // process.exit if git.diff is empty string
+  const commitsPromise = model.messages(diff, commitContext, config.generate) // process.exit if git.diff is empty string
 
   if (config.review) {
     _spinner.start("Grab some coffee while I'm reading your code")
